@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS:GO Кейсы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #1b1b1b;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            animation: fadeIn 1s ease-in;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .balance {
+            font-size: 24px;
+            color: #4CAF50;
+        }
+
+        .inventory {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 300px;
+            height: 100%;
+            background: #2d2d2d;
+            padding: 20px;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+        }
+
+        .inventory.show {
+            transform: translateX(0);
+        }
+
+        .inventory-toggle {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .inventory-item {
+            background: #3d3d3d;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .inventory-item img {
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
+        }
+
+        .cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            animation: slideUp 1s ease-out;
+        }
+
+        .case {
+            background: #2d2d2d;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .case:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .case img {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            transition: transform 0.5s;
+        }
+
+        .case:hover img {
+            transform: scale(1.1);
+        }
+
+        .case-name {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #ffd700;
+            transition: color 0.3s;
+        }
+
+        .case-price {
+            font-size: 16px;
+            color: #4CAF50;
+            transition: color 0.3s;
+        }
+
+        .open-button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .open-button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .open-button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.5s;
+        }
+
+        .open-button:hover:before {
+            left: 100%;
+        }
+
+        .open-button.disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .case-opening {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .roulette {
+            width: 80%;
+            height: 200px;
+            background: #2d2d2d;
+            overflow: hidden;
+            position: relative;
+            border-radius: 10px;
+        }
+
+        .items-container {
+            display: flex;
+            position: absolute;
+            left: 0;
+            transition: left 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .roulette-item {
+            width: 200px;
+            height: 200px;
+            padding: 10px;
+            background: #3d3d3d;
+            margin: 0 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .roulette-item img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .winner-animation {
+            animation: winner 1s ease-in-out;
+        }
+
+        @keyframes winner {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .winner-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2d2d2d;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1001;
+            width: 400px;
+            height: 400px;
+            display: none;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .winner-modal h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .winner-modal img {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            margin: 20px 0;
+        }
+
+        .winner-modal p {
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .close-button {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .close-button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>CS:GO Кейсы</h1>
+            <div class="balance">Баланс: <span id="balance">100.00</span>$</div>
+        </header>
+
+        <div class="cases-grid">
+            <div class="case">
+                <img src="https://www.davno.ru/assets/images/cards/big/birthday-1001.jpg" alt="Кейс Призма">
+                <h3 class="case-name">Кейс "Призма"</h3>
+                <p class="case-price">2.49$</p>
+                <button class="open-button">Открыть кейс</button>
+            </div>
+
+            <div class="case">
+                <img src="https://example.com/case2.png" alt="Кейс Хрома">
+                <h3 class="case-name">Кейс "Хрома"</h3>
+                <p class="case-price">1.99$</p>
+                <button class="open-button">Открыть кейс</button>
+            </div>
+
+            <div class="case">
+                <img src="https://example.com/case3.png" alt="Кейс Спектр">
+                <h3 class="case-name">Кейс "Спектр"</h3>
+                <p class="case-price">3.99$</p>
+                <button class="open-button">Открыть кейс</button>
+            </div>
+
+            <div class="case">
+                <img src="https://example.com/case4.png" alt="Кейс Гамма">
+                <h3 class="case-name">Кейс "Гамма"</h3>
+                <p class="case-price">2.99$</p>
+                <button class="open-button">Открыть кейс</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="inventory-toggle">Инвентарь</button>
+    <div class="inventory">
+        <h2>Мои предметы</h2>
+        <div id="inventory-items"></div>
+    </div>
+
+    <div class="case-opening">
+        <div class="roulette">
+            <div class="items-container"></div>
+        </div>
+    </div>
+
+    <div class="winner-modal">
+        <h2>Поздравляем!</h2>
+        <div class="winner-content"></div>
+        <button class="close-button">Закрыть</button>
+    </div>
+
+    <script>
+        let balance = 100.00;
+        const inventory = [];
+        const items = [
+            { name: 'AK-47 | Азимов', rarity: 'red', img: 'https://www.davno.ru/assets/images/cards/big/birthday-1001.jpg' },
+            { name: 'M4A4 | Вой', rarity: 'pink', img: 'https://img.championat.com/s/1350x900/news/big/n/w/10-luchshih-skinov-v-cs-go-v-2022_1650809149449431120.jpg' },
+            { name: 'AWP | Драконов', rarity: 'red', img: 'https://img.championat.com/i/h/s/1650806868623220694.jpg' },
+            { name: 'Desert Eagle | Пламя', rarity: 'pink', img: 'https://img.championat.com/i/q/q/16508069241860321088.jpg' },
+        ];
+
+        let isOpening = false;
+
+        document.querySelector('.inventory-toggle').addEventListener('click', () => {
+            document.querySelector('.inventory').classList.toggle('show');
+        });
+
+        document.querySelector('.close-button').addEventListener('click', () => {
+            document.querySelector('.winner-modal').style.display = 'none';
+            document.querySelector('.case-opening').style.display = 'none';
+            isOpening = false;
+            enableAllButtons();
+        });
+
+        function updateBalance(price) {
+            balance -= price;
+            document.getElementById('balance').textContent = balance.toFixed(2);
+        }
+
+        function addToInventory(item) {
+            inventory.push(item);
+            const inventoryContainer = document.getElementById('inventory-items');
+            const itemElement = document.createElement('div');
+            itemElement.className = 'inventory-item';
+            itemElement.innerHTML = `
+                <img src="${item.img}" alt="${item.name}">
+                <div>
+                    <p>${item.name}</p>
+                    <small>Редкость: ${item.rarity}</small>
+                </div>
+            `;
+            inventoryContainer.appendChild(itemElement);
+        }
+
+        function disableAllButtons() {
+            document.querySelectorAll('.open-button').forEach(button => {
+                button.classList.add('disabled');
+                button.textContent = 'Открытие...';
+                button.disabled = true;
+            });
+        }
+
+        function enableAllButtons() {
+            document.querySelectorAll('.open-button').forEach(button => {
+                button.classList.remove('disabled');
+                button.textContent = 'Открыть кейс';
+                button.disabled = false;
+            });
+        }
+
+        document.querySelectorAll('.open-button').forEach(button => {
+            button.addEventListener('click', () => {
+                if (isOpening) return;
+                
+                const price = parseFloat(button.parentElement.querySelector('.case-price').textContent);
+                if (balance >= price) {
+                    isOpening = true;
+                    updateBalance(price);
+                    openCase();
+                    disableAllButtons();
+                } else {
+                    alert('Недостаточно средств!');
+                }
+            });
+        });
+
+        function openCase() {
+            const caseOpening = document.querySelector('.case-opening');
+            const itemsContainer = document.querySelector('.items-container');
+            
+            itemsContainer.innerHTML = '';
+            itemsContainer.style.left = '0';
+            
+            const rouletteItems = [];
+            for(let i = 0; i < 50; i++) {
+                const randomItem = items[Math.floor(Math.random() * items.length)];
+                rouletteItems.push(randomItem);
+            }
+            
+            rouletteItems.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'roulette-item';
+                itemElement.innerHTML = `
+                    <img src="${item.img}" alt="${item.name}">
+                    <p>${item.name}</p>
+                `;
+                itemsContainer.appendChild(itemElement);
+            });
+            
+            caseOpening.style.display = 'flex';
+            
+            setTimeout(() => {
+                const finalPosition = -(Math.floor(Math.random() * 50) * 200);
+                itemsContainer.style.left = finalPosition + 'px';
+                
+                setTimeout(() => {
+                    const winningIndex = Math.floor(Math.abs(finalPosition) / 200) % rouletteItems.length;
+                    const winningItem = rouletteItems[winningIndex];
+                    showWinner(winningItem);
+                    addToInventory(winningItem);
+                }, 5000);
+            }, 100);
+        }
+
+        function showWinner(item) {
+            const winnerModal = document.querySelector('.winner-modal');
+            const winnerContent = document.querySelector('.winner-content');
+            
+            winnerContent.innerHTML = `
+                <img src="${item.img}" alt="${item.name}" class="winner-animation">
+                <p>${item.name}</p>
+                <p class="rarity">Редкость: ${item.rarity}</p>
+            `;
+            
+            winnerModal.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
